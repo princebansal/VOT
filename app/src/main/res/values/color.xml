@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bgcolor">#2b2937</color>
+    <color name="bgtextfieldcolor">#394264</color>
+    <color name="bgrestbtncolor">#1abc9c</color>
+    <color name="bglogoutbtncolor">#ea6060</color>
+    <color name="touchtextcolor">#2196f3</color>
+    <color name="volsbbtextcolor">#ffffff</color>
+    <color name="hinttextcolor">#cbcbcd</color>
+    <color name="bgdialogcolor">#2b2937</color>
+</resources>

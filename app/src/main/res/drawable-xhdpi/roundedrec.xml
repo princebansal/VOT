@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="false" android:state_window_focused="false">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp"></corners>
+            <padding android:bottom="12dp" android:left="6dp" android:right="6dp" android:top="12dp"></padding>
+            <solid android:color="@color/bgtextfieldcolor"></solid>
+        </shape>
+
+    </item>
+
+</selector>
