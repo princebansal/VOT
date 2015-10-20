@@ -19,7 +19,7 @@ public class ShowNotification {
     public ShowNotification(){
     }
     public ShowNotification(Context context){
-        intent = new Intent(context,MainActivity.class);
+        intent = new Intent(context,TabActivity.class);
         pIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         intentlogin = new Intent(context,NotificationReceiver.class);
         intentlogin.putExtra("action","login");

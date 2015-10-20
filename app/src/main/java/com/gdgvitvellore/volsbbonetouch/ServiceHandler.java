@@ -13,6 +13,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
@@ -37,6 +40,9 @@ public class ServiceHandler {
     public String makeServiceCall(String url, int method,
                                   List<NameValuePair> params) {
         try {
+            /*HttpParams httparams=new BasicHttpParams();
+            HttpConnectionParams.setConnectionTimeout(httparams, 10000);
+            HttpConnectionParams.setSoTimeout(httparams,5000);*/
             DefaultHttpClient httpClient = new DefaultHttpClient();
             HttpEntity httpEntity = null;
             HttpResponse httpResponse = null;

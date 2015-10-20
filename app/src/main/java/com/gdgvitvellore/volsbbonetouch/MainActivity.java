@@ -11,82 +11,143 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.StringRequest;
+import com.gdgvitvellore.volsbbonetouch.Database.Account;
+import com.gdgvitvellore.volsbbonetouch.Database.DatabaseHandler;
+import com.gdgvitvellore.volsbbonetouch.Database.RecyclerAdapter;
+import com.gdgvitvellore.volsbbonetouch.volley.AppController;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
-public class MainActivity extends Activity implements View.OnClickListener, View.OnFocusChangeListener{
-    private String url = "http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
+public class MainActivity extends Fragment implements View.OnClickListener, View.OnFocusChangeListener, TabActivity.OnActivityPageChangeListener {
+    private String url = "http://phc.prontonetworks.com/cgi-bin/authlogin";
+    private RecyclerView accountsRecycler;
+    private RecyclerAdapter adapter;
     EditText uname, password;
-    TextView res;
+    TextView res,data;
     Button login, logout, slogin;
-    List<NameValuePair> details;
+    HashMap<String,String> details;
     ProgressDialog pDialog;
     SharedPreferences s;
-    ImageView passclear, unameclear;
+    ImageView logo;
+    DatabaseHandler databaseHandler;
+    Switch autoswitch;
+    ImageView passclear, unameclear,about,uImage;
     Authentication a;
+    TabActivity tabActivity;
     String u, p, toasttext, session;
-    LinearLayout about, tfu, tfp;
-    String service = "ProntoAuthentication";
+    LinearLayout tfu, tfp,recContainer;
+    String service = "ProntoAuthentication",dataString="";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.new_layout);
-        //if(!isMyServiceRunning(MyService.class))
-        //startService(new Intent(this,MyService.class));
-        initvar();
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        ViewGroup rootView = (ViewGroup) inflater.inflate(
+                R.layout.new_layout, container, false);
+        databaseHandler=new DatabaseHandler(getActivity());
+        setAll(rootView);
+        return rootView;
+    }
+
+    private boolean checkAccounts() {
+        int n=databaseHandler.getContactsCount();
+        if(n>1){
+            Log.d("db","acc>1");
+            return true;
+        }
+        else {
+            Log.d("db","acc<1");
+            return false;
+        }
+    }
+
+    private void setAll(ViewGroup rootView) {
+
+        initvar(rootView);
         /*Checking if this is user's first session,
         if yes, then starting the about dialog activity*/
 
         session = s.getString("session", "first");
         if (session.equals("first")) {
             about.performClick();
-            new NetReceiver().onReceive(this, new Intent());
+            new NetReceiver().onReceive(getActivity(), new Intent());
             SharedPreferences.Editor editor = s.edit();
             editor.putString("session", "used");
             editor.commit();
         }
-
     }
 
+
     //Initialize all the variables here
-    private void initvar() {
-        about = (LinearLayout) findViewById(R.id.about);
-        tfu = (LinearLayout) findViewById(R.id.tfu);
-        tfp = (LinearLayout) findViewById(R.id.tfp);
-        uname = (EditText) findViewById(R.id.user);
-        password = (EditText) findViewById(R.id.pass);
-        s = PreferenceManager.getDefaultSharedPreferences(this);
+    private void initvar(ViewGroup v) {
+        tabActivity=(TabActivity)getActivity();
+        tabActivity.setOnActivityPageChangeListener(this,"main");
+        about = (ImageView) v.findViewById(R.id.about);
+        accountsRecycler=(RecyclerView)v.findViewById(R.id.accounts_recycler_view);
+        accountsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recContainer=(LinearLayout)v.findViewById(R.id.recycler_container);
+        tfu = (LinearLayout) v.findViewById(R.id.tfu);
+        tfp = (LinearLayout) v.findViewById(R.id.tfp);
+        uname = (EditText) v.findViewById(R.id.user);
+        uImage=(ImageView)v.findViewById(R.id.uname_image);
+        uImage.setOnClickListener(this);
+        password = (EditText) v.findViewById(R.id.pass);
+        s = PreferenceManager.getDefaultSharedPreferences(getActivity());
         uname.setOnFocusChangeListener(this);
+        logo=(ImageView)v.findViewById(R.id.imageView);
         password.setOnFocusChangeListener(this);
         uname.setText(s.getString("prontousername", null));
         password.setText(s.getString("prontopassword", null));
-        a = new Authentication(this);
-        login = (Button) findViewById(R.id.login);
-        logout = (Button) findViewById(R.id.logout);
-        slogin = (Button) findViewById(R.id.savelogin);
+        a = new Authentication(getActivity());
+        login = (Button) v.findViewById(R.id.login);
+        logout = (Button) v.findViewById(R.id.logout);
+        slogin = (Button) v.findViewById(R.id.savelogin);
         login.setOnClickListener(this);
         logout.setOnClickListener(this);
         slogin.setOnClickListener(this);
+        //login.setOnTouchListener(this);
+        //logout.setOnTouchListener(this);
+        //slogin.setOnTouchListener(this);
+        if(checkAccounts()){
+            uImage.setRotationX(90);
+        }
         about.setOnClickListener(this);
-        unameclear = (ImageView) findViewById(R.id.unameclear);
-        passclear = (ImageView) findViewById(R.id.passclear);
+        unameclear = (ImageView) v.findViewById(R.id.unameclear);
+        passclear = (ImageView) v.findViewById(R.id.passclear);
         unameclear.setOnClickListener(this);
         passclear.setOnClickListener(this);
         uname.addTextChangedListener(new TextWatcher() {
@@ -142,55 +203,66 @@ public class MainActivity extends Activity implements View.OnClickListener, View
 
         switch (v.getId()) {
             case R.id.login:
+                logo.startAnimation(AnimationUtils.loadAnimation(getActivity(),R.anim.size));
                 if (checkConnection()) {
-                    details = new ArrayList<NameValuePair>();
+                    details = new HashMap<String,String>();
                     //Set the url to login
-                    url = "http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
+                    url = "http://phc.prontonetworks.com/cgi-bin/authlogin";
                     u = uname.getText().toString();
                     p = password.getText().toString();
                     //Adding credentials to the list
-                    details.add(new BasicNameValuePair("userId", u));
-                    details.add(new BasicNameValuePair("password", p));
-                    details.add(new BasicNameValuePair("serviceName", service));
+                    details.put("userId", u);
+                    details.put("password", p);
+                    details.put("serviceName", service);
                     //Calling Authentication class to perform login
-                    new Authentication(this).login(details);
+                    new Authentication(getActivity()).login(details);
                 } else
-                    Toast.makeText(this, "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.logout:
+                logo.startAnimation(AnimationUtils.loadAnimation(getActivity(),R.anim.size));
                 if (checkConnection()) {
                     details = null;
                     //Set the url to logout
                     url = "http://phc.prontonetworks.com/cgi-bin/authlogout";
                     //Calling Authentication class to perform logout
-                    new Authentication(this).logout();
+                    new Authentication(getActivity()).logout();
                 } else
-                    Toast.makeText(this, "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
 
                 break;
             case R.id.savelogin:
+                logo.startAnimation(AnimationUtils.loadAnimation(getActivity(),R.anim.size));
+
                 if (checkConnection()) {
-                    details = new ArrayList<NameValuePair>();
+                    details = new HashMap<String,String>();
                     //Set the url to login
-                    url = "http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
+                    url = "http://phc.prontonetworks.com/cgi-bin/authlogin";
                     u = uname.getText().toString();
                     p = password.getText().toString();
                     //Saving credentials in the shared preferences
+                    if(!databaseHandler.checkContact(u)){
+                        Account a=new Account();
+                        a.setName(u);
+                        a.setPassword(p);
+                        databaseHandler.addAccount(a);
+                    }
                     SharedPreferences.Editor editor = s.edit();
                     editor.putString("prontousername", u);
                     editor.putString("prontopassword", p);
                     editor.commit();
-                    details.add(new BasicNameValuePair("userId", u));
-                    details.add(new BasicNameValuePair("password", p));
-                    details.add(new BasicNameValuePair("serviceName", service));
+                    details.put("userId", u);
+                    details.put("password", p);
+                    details.put("serviceName", service);
                     //Calling Authentication class to perform logout
-                    new Authentication(this).login(details);
+                    new Authentication(getActivity()).login(details);
                 } else
-                    Toast.makeText(this, "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Not connected to Volsbb", Toast.LENGTH_SHORT).show();
+                break;
 
             case R.id.about:
                 //Starting About Dialog on click about icon
-                Intent i = new Intent(this, AboutDialog.class);
+                Intent i = new Intent(getActivity(), AboutDialog.class);
                 startActivity(i);
                 break;
             case R.id.unameclear:
@@ -201,8 +273,21 @@ public class MainActivity extends Activity implements View.OnClickListener, View
                 password.setText("");
                 passclear.setVisibility(ImageView.GONE);
                 break;
+            case R.id.uname_image:
+                if(checkAccounts()) {
+                    uImage.setRotationX(180);
+                    adapter=new RecyclerAdapter(getActivity(),databaseHandler.getAllContacts(),this);
+                    recContainer.setVisibility(LinearLayout.VISIBLE);
+                    accountsRecycler.setAdapter(adapter);
+                }
+                break;
         }
 
+    }
+    public void resetForeground(){
+       // login.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
+        //logout.setBackground(getResources().getDrawable(R.drawable.logoutbtnbg));
+        //slogin.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
     }
 
     /*private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -237,19 +322,20 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         else {
             return false;
         }*/
-        final WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        final WifiManager wifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
         final ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         final android.net.NetworkInfo wifi = connMgr
                 .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifiManager.isWifiEnabled()) {
             Log.d("enabled", "enabled");
             final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             final SupplicantState supp = wifiInfo.getSupplicantState();
-            Log.d("wifi", wifiInfo.getSSID());
+            Log.d("wifi", wifiInfo.getSSID()+"lll");
+            Log.d("wificc", String.valueOf(wifi.isConnected())+"lll");
             //Compared with ssid of connected wifi network
-            if ((wifiInfo.getSSID().toLowerCase().contains("volsbb") || wifiInfo.getSSID().equalsIgnoreCase("\"VOLS\"")) && wifi.isConnected()) {
-                Log.d("wifistate", "connected");
+            if((wifiInfo.getSSID().toLowerCase().contains("volsbb")||wifiInfo.getSSID().toLowerCase().contains("\"VOLS\"")||wifiInfo.getSSID().toLowerCase().contains("\"VIT2.4G\"")||wifiInfo.getSSID().toLowerCase().contains("\"VIT5G\"")||wifiInfo.getSSID().toLowerCase().contains("vit2.4g")||wifiInfo.getSSID().toLowerCase().contains("vit5g"))&&wifi.isConnected()) {
+                Log.d("wifistate","connected");
                 return true;
             }
             return false;
@@ -266,13 +352,15 @@ public class MainActivity extends Activity implements View.OnClickListener, View
             switch (v.getId()) {
                 case R.id.user:
                     tfu.setBackground(getResources().getDrawable(R.drawable.roundedrecfilled));
-                    if (!uname.getText().toString().equals(""))
+                    if (!uname.getText().toString().equals("")){
                         unameclear.setVisibility(ImageView.VISIBLE);
+                    passclear.setVisibility(ImageView.INVISIBLE);}
                     break;
                 case R.id.pass:
                     tfp.setBackground(getResources().getDrawable(R.drawable.roundedrecfilled));
-                    if (!password.getText().toString().equals(""))
+                    if (!password.getText().toString().equals("")){
                         passclear.setVisibility(ImageView.VISIBLE);
+                    unameclear.setVisibility(ImageView.INVISIBLE);}
                     break;
             }
 
@@ -283,6 +371,69 @@ public class MainActivity extends Activity implements View.OnClickListener, View
             unameclear.setVisibility(ImageView.GONE);
         }
     }
+
+    /*@Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if(event.getAction()==MotionEvent.ACTION_DOWN) {
+            switch (v.getId()) {
+                case R.id.login:
+                    login.setBackground(getResources().getDrawable(R.drawable.restbtnbgpressed));
+                    break;
+                case R.id.logout:
+                    logout.setBackground(getResources().getDrawable(R.drawable.logoutbtnbgpressed));
+                    break;
+                case R.id.savelogin:
+                    slogin.setBackground(getResources().getDrawable(R.drawable.restbtnbgpressed));
+                    break;
+            }
+        }
+        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+            if ((event.getY() <0) || (event.getY() > v.getHeight()) || (event.getX() < 0) || (event.getX() > v.getWidth())) {
+                switch (v.getId()) {
+                    case R.id.login:
+                        login.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
+                        break;
+                    case R.id.logout:
+                        logout.setBackground(getResources().getDrawable(R.drawable.logoutbtnbg));
+                        break;
+                    case R.id.savelogin:
+                        slogin.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
+                        break;
+                }
+            }
+        }
+        if(event.getAction()==MotionEvent.ACTION_UP){
+            switch (v.getId()) {
+                case R.id.login:
+                    login.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
+                    break;
+                case R.id.logout:
+                    logout.setBackground(getResources().getDrawable(R.drawable.logoutbtnbg));
+                    break;
+                case R.id.savelogin:
+                    slogin.setBackground(getResources().getDrawable(R.drawable.restbtnbg));
+                    break;
+            }
+        }
+        return false;
+    }*/
+
+    @Override
+    public void OnPageChange(int i) {
+        resetForeground();
+    }
+
+    public void applyItem(Account account) {
+        recContainer.setVisibility(LinearLayout.GONE);
+        uname.setText(account.getName());
+        password.setText(account.getPassword());
+    }
+
+    public void deleteAccount(Account account) {
+        databaseHandler.deleteContact(account);
+    }
+
+
 
 
     /*private class GetEvents extends AsyncTask<Void, Void,String> {

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bgcolor"
@@ -10,7 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal|bottom"
+        android:clickable="true"
         android:layout_weight="20">
+
+
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -35,12 +41,16 @@
         android:textSize="45sp"
         android:layout_gravity="center_vertical" />
 
+            <LinearLayout
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_gravity="center_vertical">
         <ImageView
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:id="@+id/imageView"
-            android:src="@drawable/notiicon2"
-            android:layout_gravity="center_vertical"/>
+            android:src="@drawable/notiicon2"/>
+                </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
@@ -78,7 +88,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/imageView2"
+                android:id="@+id/uname_image"
                 android:layout_gravity="left|center_vertical"
                 android:src="@drawable/username_icon"/>
             <FrameLayout
@@ -90,7 +100,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress"
-            android:ems="15"
+            android:ems="50"
             android:hint="Username"
             android:textCursorDrawable="@null"
             android:textColor="@color/volsbbtextcolor"
@@ -114,12 +124,19 @@
 
     </FrameLayout>
 
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginTop="35dp"
+            android:layout_weight="60">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginTop="35dp"
-        android:layout_weight="20">
+        android:layout_height="wrap_content">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -143,7 +160,7 @@
             android:inputType="textPassword"
             android:layout_marginLeft="15dp"
             android:hint="Password"
-            android:ems="15"
+            android:ems="50"
             android:textCursorDrawable="@null"
             android:textColor="@color/volsbbtextcolor"
             android:textColorHint="@color/hinttextcolor"
@@ -179,7 +196,7 @@
             android:textStyle="bold"
             android:textSize="15sp"
             android:textColor="@color/volsbbtextcolor"
-            android:background="@drawable/restbtnbg"
+            android:background="@drawable/restbutton"
             android:id="@+id/login"
             android:elevation="5dp"
             android:layout_weight="33"/>
@@ -191,7 +208,7 @@
             android:text="SAVE &amp; LOGIN"
             android:textSize="15sp"
             android:textColor="@color/volsbbtextcolor"
-            android:background="@drawable/restbtnbg"
+            android:background="@drawable/restbutton"
             android:textStyle="bold"
             android:layout_marginLeft="10dp"
             android:id="@+id/savelogin"
@@ -206,24 +223,46 @@
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/volsbbtextcolor"
-            android:background="@drawable/logoutbtnbg"
+            android:background="@drawable/logoutbutton"
             android:id="@+id/logout"
             android:elevation="5dp"
             android:layout_weight="34"/>
 
     </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:visibility="gone"
+                android:orientation="vertical"
+                android:id="@+id/recycler_container"
+                android:background="@color/bgtextfieldcolor"
+                android:layout_marginTop="65dp">
+                <android.support.v7.widget.RecyclerView
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:id="@+id/accounts_recycler_view"
+                    ></android.support.v7.widget.RecyclerView>
+            </LinearLayout>
+        </FrameLayout>
 </LinearLayout>
-<LinearLayout
+
+
+
+    <LinearLayout
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:id="@+id/about"
-    android:layout_weight="20">
+    android:orientation="horizontal"
+    android:gravity="center">
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_about1"
-        android:layout_gravity="center_horizontal" /></LinearLayout>
+        android:id="@+id/about"
+        android:layout_gravity="center_horizontal" />
+    </LinearLayout>
 </LinearLayout>
+
+

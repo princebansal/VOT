@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="bgcolor">#2b2937</color>
+    <color name="colorPrimaryDark">#ff111119</color>
+    <color name="colorPrimary">#2b2937</color>
+    <color name="colorAccent">#1abc9c</color>
     <color name="bgtextfieldcolor">#394264</color>
     <color name="bgrestbtncolor">#1abc9c</color>
+    <color name="bgrestbtncolorpressed">#ff1be6c5</color>
     <color name="bglogoutbtncolor">#ea6060</color>
+    <color name="bglogoutbtncolorpressed">#ffffbac1</color>
     <color name="touchtextcolor">#2196f3</color>
+    <color name="touchtextcolorpressed">#ff63d3ff</color>
     <color name="volsbbtextcolor">#ffffff</color>
     <color name="hinttextcolor">#cbcbcd</color>
     <color name="bgdialogcolor">#2b2937</color>
+    <color name="whitelight">#ffaeadaf</color>
+    <color name="seperator">#ffb7a9c6</color>
+    <color name="tabbgpressed">#22FFFFFF</color>
 </resources>

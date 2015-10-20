@@ -4,7 +4,7 @@
     <item>
         <shape android:shape="rectangle" >
             <corners android:radius="2dp"></corners>
-            <padding android:bottom="6dp" android:left="6dp" android:right="6dp" android:top="6dp"></padding>
+            <padding android:bottom="6dp" android:left="2dp" android:right="2dp" android:top="6dp"></padding>
             <solid android:color="@color/bglogoutbtncolor"></solid>
         </shape>
 

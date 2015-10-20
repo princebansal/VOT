@@ -7,20 +7,36 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.gdgvitvellore.volsbbonetouch.volley.AppController;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shalini on 31-01-2015.
  */
 public class Authentication {
-    private String url="http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
-    List<NameValuePair> details;
+    private String url="http://phc.prontonetworks.com/cgi-bin/authlogin";
+    HashMap<String,String> details;
     String service="ProntoAuthentication";
     private Context context;
+    public static String dataSession="";
     private String toasttext="";
     private SharedPreferences s;
     private String u,p;
@@ -36,47 +52,129 @@ public class Authentication {
         s= PreferenceManager.getDefaultSharedPreferences(context);
         u=s.getString("prontousername","a");
         p=s.getString("prontopassword","a");
-        details=new ArrayList<NameValuePair>();
+        details= new HashMap<String,String>();
         details=null;
     }
     public void login(){
-        url="http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
+        url="http://phc.prontonetworks.com/cgi-bin/authlogin";
         contentText[0]="Logging In";
         contentText[1]="Logged In";
-        details=new ArrayList<NameValuePair>();
-        details.add(new BasicNameValuePair("userId",u));
-        details.add(new BasicNameValuePair("password",p));
-        details.add(new BasicNameValuePair("serviceName", service));
-        new GetEvents().execute();
+        details= new HashMap<String,String>();
+        details.put("userId", u);
+        details.put("password", p);
+        details.put("serviceName", service);
+        execute();
     }
-    public void login(List<NameValuePair> det){
-        url="http://phc.prontonetworks.com/cgi-bin/authlogin?URI=http://www.msftncsi.com/redirect";
+    public void login(HashMap<String, String> det){
+        url="http://phc.prontonetworks.com/cgi-bin/authlogin";
         contentText[0]="Logging In";
         contentText[1]="Logged In";
-        details=new ArrayList<NameValuePair>();
+        details= new HashMap<String,String>();
         details=det;
-        new GetEvents().execute();
+        execute();
     }
     public void logout(){
         details=null;
         contentText[0]="Logging Out";
         contentText[1]="Logged Out";
         url="http://phc.prontonetworks.com/cgi-bin/authlogout";
-        new GetEvents().execute();
+        execute();
     }
-    private class GetEvents extends AsyncTask<Void, Void,String> {
+    public void execute() {
+        sn.setText(contentText[0]).notifyInstant();
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                url,
+                new Response.Listener<String>() {
+
+
+                    @Override
+                    public void onResponse(String result) {
+                        Log.d("presponse", result.toString());
+                        if(result==null)
+                        {
+                            Toast.makeText(context,"Unknown network",Toast.LENGTH_SHORT).show();
+                        }
+                        else {
+                            if (result.contains("Logout successful")) {
+                                toasttext = "Logged out";
+                                Log.d("enter", "0");
+                                sn.setText(contentText[1]).notifyInstant();
+                            } else if (result.contains("Successful Pronto Authentication")) {
+                                toasttext = "Logged in";
+                                dataSession= Jsoup.parse(result).getElementsByClass("orangeText10").get(1).attr("href");
+                                SharedPreferences.Editor editor = s.edit();
+                                editor.putString("dataUrl", dataSession);
+                                editor.commit();
+                                Log.d("enter", "1");
+                                sn.setText(contentText[1]).notifyInstant();
+                            } else if (result.contains("There is no active session to logout")) {
+                                toasttext = "There is no active session";
+                                Log.d("enter", "2");
+                                sn.setText("Login/Logout").notifyInstant();
+                            } else if (result.contains("Sorry, please check your username and password")||result.contains("Sorry, that password was not accepted")||result.contains("Sorry, that account does not exist")) {
+                                toasttext = "Invalid username/password";
+                                Log.d("enter", "3");
+                                sn.setText("Login/Logout").notifyInstant();
+                            } else if (result.contains("Sorry, your free access quota is over")) {
+                                toasttext = "Your free access quota is over";
+                                Log.d("enter", "4");
+                                sn.setText("Login/Logout").notifyInstant();
+                            }
+                            else if (result.contains("ACTIVE SESSION ERROR")) {
+                                toasttext = "Sorry! User Already has an active session";
+                                Log.d("enter", "5");
+                                sn.setText("Login/Logout").notifyInstant();
+                            } else {
+                                toasttext = "Already Logged in";
+                                Log.d("enter", "6");
+                                sn.setText(contentText[1]).notifyInstant();
+                            }
+                            Toast.makeText(context, toasttext, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d("perror", "Error: " + error.getMessage());
+                error.printStackTrace();
+                Toast.makeText(context,"Unknown network",Toast.LENGTH_SHORT).show();
+                sn.setText("Login/Logout").notifyInstant();
+                // hide the progress dialog
+            }
+
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+
+                return details;
+            }
+
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                Log.d("parsenet",response.data.toString());
+
+                return super.parseNetworkResponse(response);
+            }
+        };
+
+        AppController.getInstance().addToRequestQueue(strReq, "request");
+
+    }
+
+    /*private class GetEvents extends AsyncTask<Void, Void,String> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            sn.setText(contentText[0]).notifyInstant();
+            //sn.setText(contentText[0]).notifyInstant();
             // Showing progress dialog
            /* pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Signing In");
             pDialog.setCancelable(false);
             pDialog.show();*/
 
-        }
-        @Override
+       //}
+        /*@Override
         protected String doInBackground(Void... params) {
             ServiceHandler sh = new ServiceHandler();
             sn.setText(contentText[0]).notifyInstant();
@@ -109,7 +207,7 @@ public class Authentication {
                 } else if (result.contains("Sorry, please check your username and password")||result.contains("Sorry, that password was not accepted")||result.contains("Sorry, that account does not exist")) {
                     toasttext = "Invalid username/password";
                     Log.d("enter", "3");
-                    sn.nBuilder.setContentText("Login/Logout");
+                    sn.setText("Login/Logout").notifyInstant();
                 } else if (result.contains("Sorry, your free access quota is over")) {
                     toasttext = "Your free access quota is over";
                     Log.d("enter", "4");
@@ -125,9 +223,10 @@ public class Authentication {
             /*if (pDialog.isShowing())
                 pDialog.dismiss();
             res.setText(result);*/
-        }
+     //   }
 
 
 
-    }
+    //}
 }
+
